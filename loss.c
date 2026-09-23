@@ -1,7 +1,105 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include<string.h>
+#include<stdbool.h>
 int main(){
+
+    //GOAL 1 - implement a fscanf here to accept csv values as our values for the array. Use tokeniser from <string.h> to cut the array at commas. 
+    //GOAL 2 - build train/test split. This should be simple - we just cut the length of the array in 2 or other one if we see fit
+    //GOAL 3 - Include milti-parameter modeling. we can ask the user for the amt of parameters that we want to work with in this situation. 
+    //GOAL 4 - Build test run and see loss on it too. 
+    //GOAL 5 - build this into a command with specific data that you must enter, then you just get the result. 
+
+
+    //I HAVE AN IDEA - basically, the gradient formula doesn't change at all for each weight - it is the same gradient_error_w[i] = error_root[i] * (-2*x[i]); just the gradient x[i] obviously changes, since we are working with different arrays. 
+
+
+    //GOAL 1 implementation.
+    FILE *data;
+    // n = amt of rows, param - amount of parameters. 
+    int n;
+    int param;
+
+    printf("Enter the amount of rows in the matrix\n");
+    scanf("%i", &n);
+    printf("Enter the amount of parameters of the model. Supply this program only with the params you want to use in the data matrix.\n");
+    scanf("%i", &param);
+    data = fopen("param_values.csv", "r");
+    if(data == NULL){
+        printf("data file doesn't exist.\n");
+        return 1;
+    }
+
+    //make the matrix layout
+    double matrix[n][param];
+    int r = 0;
+    //Lets read the csv table
+    char rows[1024];
+    char *token;
+    while (fgets(rows, sizeof(rows), data) != NULL){
+        token = strtok(rows, ",");
+        int c = 0;
+        while(token != NULL){
+            matrix[r][c] = strtod(token, NULL);
+            token = strtok(NULL, ",");
+            c++;
+        }
+        r++;
+    }
+    // X matrix of parameters ready
+    printf("X matrix built\n");
     
-    //reading the data x values and y target values.
+    
+    
+    // Now let's get our target array going
+    
+    FILE *target_data;
+    target_data = fopen("target.csv", "r");
+    if(target_data == NULL){
+        printf("Target dataset empty/wrong path");
+        return 1;
+    }
+    double target[n];
+    
+    int c = 0;
+    char *token_y;
+    while (fgets(rows, sizeof(rows), target_data) != NULL){
+        token_y = strtok(rows, ",");
+        while(token_y != NULL){
+            target[c] = strtod(token_y, NULL);
+            token_y = strtok(NULL, ",");
+            c++;
+        }
+    }
+    // Y array of targets ready
+    printf("Y array built\n");
+
+    //closing data
+    fclose(data);
+    fclose(target_data);
+
+    //GOAL 1 IMPLEMENTED
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //Let's start by creating a simple function that we are trying to model. 
     int x[100] = {4, 16, -16, -16, 11, 4, 8, -12, 8, 2, 14, 18, -11, -15, -18, -15, 9, -12, -1, -20, -2, 16, -6, 9, 2, -2, 10, 13, 5, 16, -7, 13, 14, 10, 1, 15, -15, -6, 0, 17, -4, -13, 17, -11, -15, -5, 11, -12, 14, 8, -18, -14, 10, 0, -13, -3, -15, 18, 19, 3, 10, 18, -2, -16, -16, 20, -4, -6, -18, 8, -12, 3, 8, -12, 13, 0, 16, 4, 4, 14, -16, -4, 10, -14, 9, 6, 12, -19, -14, -15, -11, -13, -8, 14, 18, 6, -9, -16, 0, -14};
