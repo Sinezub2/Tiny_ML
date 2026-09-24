@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include<string.h>
 #include<stdbool.h>
+#include<math.h>
+
 int main(){
 
     //GOAL 1 - implement a fscanf here to accept csv values as our values for the array. Use tokeniser from <string.h> to cut the array at commas. 
@@ -81,6 +83,198 @@ int main(){
     //GOAL 1 IMPLEMENTED
 
 
+    //GOAL 2 
+    
+    //First, let's build the shuffling algoythm. 
+    int i;
+    int j;
+    int z;
+    
+
+    // build indices list
+    
+    int indices[n];
+    for(i=0; i<n; i++){
+        indices[i]=i;
+    }
+    int z;
+    // shuffle the indices
+    for(i=n-1; i>0; i--){
+        
+        j = rand() % (i+1);
+        z = 0;
+        z = indices[i];
+        indices[i] = indices[j];
+        indices[j] = z;
+    }
+
+    int old_row;
+    int p;
+    double new_matrix[n][param];
+    double new_target[n];
+    //assign values
+    for(i=0;i<n;i++){
+            old_row = indices[i];
+            for(p=0;p<param;p++){
+                new_matrix[i][p] = matrix[old_row][p];
+            }
+            new_target[i]=target[old_row];
+        }
+    
+    // Train/val/test split
+
+    //First, let's calculate the amount of rows that should go into each set
+    double train_n = ((double)n / 100) * 70;
+    int train = (int)train_n;
+    int val; 
+    int test;
+    int diff = n - train;
+    if (diff % 2 != 0){
+        val = (diff / 2) + 1;
+        test = diff - val; 
+    }
+    else{
+        val = diff / 2;
+        test = diff - val;
+    }
+    double train_matrix[train][param];
+    double val_matrix[val][param];
+    double test_matrix[test][param];
+
+    double train_target[train];
+    double val_target[val];
+    double test_target[test];
+
+    //Let's now asign new matrices their values.
+    
+    for(p=0; p<param; p++){
+        for(i=0; i<train; i++){
+            train_matrix[i][p] = new_matrix[i][p];
+            train_target[i] = new_target[i];
+        }
+    }
+
+    for(p=0; p<param; p++){
+        for(i=0; i<val; i++){
+            val_matrix[i][p] = new_matrix[train+i][p];
+            val_target[i] = new_target[train+i];
+        }
+    }
+
+    for(p=0; p<param; p++){
+        for(i=0; i<test; i++){
+            test_matrix[i][p] = new_matrix[train+val+i][p];
+            test_target[i] = new_target[train+val+i];
+        }
+    }
+
+    // Feature scaling. 
+
+    double train_sum[param];
+
+    // u and q for train
+    
+    for(p=0; p<param; p++){
+        train_sum[p]=0;
+        for(i=0; i<train; i++){
+            train_sum[p] += train_matrix[i][p];
+        }
+    }
+
+    // Now, let's calculate u and q for each parameter.  
+    // First, of course, we need the mean, since stdev can be calculated with mean.
+    double u_train[param];
+
+
+    for(p=0; p<param; p++){
+        u_train[p]=train_sum[p] / train;    
+    }
+
+    
+    // Hooray, we got our mean per each parameter in each matrix! now, we need to find st.dev. 
+    // Plan - 1) Find squared diff 2) sum squared diff 3) divide the sum by count 4) take the root. How though, in C? I'll have to search for it a bit.
+
+    double sq_diff_train_sum[param];
+
+    
+    
+    for(p=0; p<param; p++){
+        sq_diff_train_sum[p] = 0;
+        for(i=0; i<train; i++){
+            sq_diff_train_sum[p] += (train_matrix[i][p] - u_train[p]) * (train_matrix[i][p] - u_train[p]);
+        }
+    }
+
+
+    // great, now divide by rows count and take the square root. 
+
+    double q_train[param];
+
+    for(p=0; p<param; p++){
+        q_train[p] = sqrt(sq_diff_train_sum[p] / train);
+        if(q_train[p] == 0){
+            printf("st.dev in parameter %i is 0. It will be assigned 0.1 for now", p);
+            q_train[p] = 0.1;
+        }
+    }
+
+    // now, create scaled values. 
+    double X_train[train][param];
+    double X_val[val][param];
+    double X_test[test][param];
+    
+    for(p=0; p<param; p++){
+        for(i=0; i<train; i++){
+            X_train[i][p]=(train_matrix[i][p] - u_train[p]) / q_train[p];
+        }
+        for(i=0; i<val; i++){
+            X_val[i][p]=(val_matrix[i][p] - u_train[p]) / q_train[p];
+        }
+        for(i=0; i<test; i++){
+            X_test[i][p]=(test_matrix[i][p] - u_train[p]) / q_train[p];
+        }
+    }
+
+    // GOAL 3 IMPLEMENTED
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(p=0; p<param; p++){
+        for(i=0; i<n; i++){
+            train_matrix[i][p];
+        }
+    }
+
+
+    
+    
+
+    
+
     
 
 
@@ -101,6 +295,15 @@ int main(){
 
 
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
     //Let's start by creating a simple function that we are trying to model. 
     int x[100] = {4, 16, -16, -16, 11, 4, 8, -12, 8, 2, 14, 18, -11, -15, -18, -15, 9, -12, -1, -20, -2, 16, -6, 9, 2, -2, 10, 13, 5, 16, -7, 13, 14, 10, 1, 15, -15, -6, 0, 17, -4, -13, 17, -11, -15, -5, 11, -12, 14, 8, -18, -14, 10, 0, -13, -3, -15, 18, 19, 3, 10, 18, -2, -16, -16, 20, -4, -6, -18, 8, -12, 3, 8, -12, 13, 0, 16, 4, 4, 14, -16, -4, 10, -14, 9, 6, 12, -19, -14, -15, -11, -13, -8, 14, 18, 6, -9, -16, 0, -14};
     double y[100];
