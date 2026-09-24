@@ -395,4 +395,42 @@ int main(){
     }
     printf("Training complete\n");
 
+
+
+
+
+
+/// VALIDATION
+ 
+
+   
+    double val_pred[val];
+    double val_error[val];
+
+
+
+    loss = 0;
+    sum = 0;
+    for(i=0; i<val; i++){
+        val_pred[i]=0; 
+        for(p=0; p<updated_param; p++){
+            val_pred[i] += X_val[i][p] * weights[p];
+        }
+        val_pred[i] += b;
+    }
+    
+        
+    for(i=0; i<val; i++){
+        val_error[i]= (val_target[i]-val_pred[i]) * (val_target[i]-val_pred[i]);
+        sum += val_error[i];
+    }
+
+
+    loss = sum / val;
+
+
+    printf("loss on val - %lf\n", loss);
+
+    
+
 }
