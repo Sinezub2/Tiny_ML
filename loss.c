@@ -431,6 +431,41 @@ int main(){
 
     printf("loss on val - %lf\n", loss);
 
+
+
+
+
+    // Test
+    double test_pred[test];
+    double test_error[test];
+
+
+
+    loss = 0;
+    sum = 0;
+    for(i=0; i<test; i++){
+        test_pred[i]=0; 
+        for(p=0; p<updated_param; p++){
+            test_pred[i] += X_test[i][p] * weights[p];
+        }
+        test_pred[i] += b;
+    }
+    
+        
+    for(i=0; i<test; i++){
+        test_error[i]= (test_target[i]-test_pred[i]) * (test_target[i]-test_pred[i]);
+        sum += test_error[i];
+    }
+
+
+    loss = sum / test;
+
+
+    printf("loss on test - %lf\n", loss);
+
+    
+
+
     
 
 }
