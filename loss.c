@@ -463,6 +463,25 @@ int main(){
 
     printf("loss on test - %lf\n", loss);
 
+
+    //checking out the equation.
+    double original_weight[updated_param];
+    double original_b;
+    double param_sum = 0.0;
+    for(p=0; p<updated_param; p++){
+    original_weight[p] = weights[p] / q_train[p];
+    param_sum += (weights[p] * u_train[p] / q_train[p]);
+    printf("Weight %i was predicted to be %lf\n", p, original_weight[p]);
+    }
+    original_b = b - param_sum;
+    printf("original b is = %lf\n", original_b);
+
+
+
+
+
+
+
     
 
 
