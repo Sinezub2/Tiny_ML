@@ -97,7 +97,7 @@ int main(){
     for(i=0; i<n; i++){
         indices[i]=i;
     }
-    int z;
+
     // shuffle the indices
     for(i=n-1; i>0; i--){
         
