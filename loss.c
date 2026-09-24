@@ -170,23 +170,76 @@ int main(){
 
     // Feature scaling. 
 
-    double train_sum[param];
+    // FIRST OF ALL - here feature updating based on user input.
+
+
+
+
+    int keeping_check[param];
+    printf("Enter keep or enter discard for each parameter\n");
+    for(i=0; i<param; i++){
+        char input[30];
+        scanf("%29s", input);
+        if(strcmp(input, "keep") == 0){
+            keeping_check[i] = 1;
+        }
+        else if(strcmp(input, "discard") == 0){
+            keeping_check[i] = 0;
+        }
+        else{
+            printf("Please, enter a valid input, either keep or discard\n");
+            i--;
+            continue;
+        }
+    }
+    int updated_param = 0;
+    for(p=0;p<param;p++){
+        if(keeping_check[p] == 1){
+            updated_param += 1;
+        }
+    }
+    int new_p = 0;
+    
+    double features_train[train][updated_param];
+    double features_val[val][updated_param];
+    double features_test[test][updated_param];
+    
+    
+    for(p=0; p<param; p++){
+        if (keeping_check[p] == 1){
+                for(i=0; i<train; i++){
+                    features_train[i][new_p] = train_matrix[i][p];
+                }
+                for(i=0; i<val; i++){
+                    features_val[i][new_p] = val_matrix[i][p];
+                }
+                for(i=0; i<test; i++){
+                    features_test[i][new_p] = test_matrix[i][p];
+                }
+                new_p +=1;
+        }
+    }
+   
+   //INPUT DONE NOW TO MEAN AND STUFF
+   
+   
+    double train_sum[updated_param];
 
     // u and q for train
     
-    for(p=0; p<param; p++){
+    for(p=0; p<updated_param; p++){
         train_sum[p]=0;
         for(i=0; i<train; i++){
-            train_sum[p] += train_matrix[i][p];
+            train_sum[p] += features_train[i][p];
         }
     }
 
     // Now, let's calculate u and q for each parameter.  
     // First, of course, we need the mean, since stdev can be calculated with mean.
-    double u_train[param];
+    double u_train[updated_param];
 
 
-    for(p=0; p<param; p++){
+    for(p=0; p<updated_param; p++){
         u_train[p]=train_sum[p] / train;    
     }
 
@@ -194,44 +247,46 @@ int main(){
     // Hooray, we got our mean per each parameter in each matrix! now, we need to find st.dev. 
     // Plan - 1) Find squared diff 2) sum squared diff 3) divide the sum by count 4) take the root. How though, in C? I'll have to search for it a bit.
 
-    double sq_diff_train_sum[param];
+    double sq_diff_train_sum[updated_param];
 
     
     
-    for(p=0; p<param; p++){
+    for(p=0; p<updated_param; p++){
         sq_diff_train_sum[p] = 0;
         for(i=0; i<train; i++){
-            sq_diff_train_sum[p] += (train_matrix[i][p] - u_train[p]) * (train_matrix[i][p] - u_train[p]);
+            sq_diff_train_sum[p] += (features_train[i][p] - u_train[p]) * (features_train[i][p] - u_train[p]);
         }
     }
 
 
     // great, now divide by rows count and take the square root. 
 
-    double q_train[param];
+    double q_train[updated_param];
 
-    for(p=0; p<param; p++){
+    for(p=0; p<updated_param; p++){
         q_train[p] = sqrt(sq_diff_train_sum[p] / train);
-        if(q_train[p] == 0){
-            printf("st.dev in parameter %i is 0. It will be assigned 0.1 for now", p);
-            q_train[p] = 0.1;
+        if (q_train[p] == 0){
+            printf("You have a constant value in parameter %i. Please, in the next iteration of the program, drop that parameter.", p);
+            return 1;
         }
     }
 
+
+
     // now, create scaled values. 
-    double X_train[train][param];
-    double X_val[val][param];
-    double X_test[test][param];
+    double X_train[train][updated_param];
+    double X_val[val][updated_param];
+    double X_test[test][updated_param];
     
-    for(p=0; p<param; p++){
+    for(p=0; p<updated_param; p++){
         for(i=0; i<train; i++){
-            X_train[i][p]=(train_matrix[i][p] - u_train[p]) / q_train[p];
+            X_train[i][p]=(features_train[i][p] - u_train[p]) / q_train[p];
         }
         for(i=0; i<val; i++){
-            X_val[i][p]=(val_matrix[i][p] - u_train[p]) / q_train[p];
+            X_val[i][p]=(features_val[i][p] - u_train[p]) / q_train[p];
         }
         for(i=0; i<test; i++){
-            X_test[i][p]=(test_matrix[i][p] - u_train[p]) / q_train[p];
+            X_test[i][p]=(features_test[i][p] - u_train[p]) / q_train[p];
         }
     }
 
@@ -259,23 +314,6 @@ int main(){
 
 
 
-
-
-
-
-    for(p=0; p<param; p++){
-        for(i=0; i<n; i++){
-            train_matrix[i][p];
-        }
-    }
-
-
-    
-    
-
-    
-
-    
 
 
 
