@@ -3,18 +3,11 @@
 #include<string.h>
 #include<stdbool.h>
 #include<math.h>
-
-int main(){
-
-    //GOAL 1 - implement a fscanf here to accept csv values as our values for the array. Use tokeniser from <string.h> to cut the array at commas. 
-    //GOAL 2 - build train/test split. This should be simple - we just cut the length of the array in 2 or other one if we see fit
-    //GOAL 3 - Include milti-parameter modeling. we can ask the user for the amt of parameters that we want to work with in this situation. 
-    //GOAL 4 - Build test run and see loss on it too. 
-    //GOAL 5 - build this into a command with specific data that you must enter, then you just get the result. 
-
-
-    //I HAVE AN IDEA - basically, the gradient formula doesn't change at all for each weight - it is the same gradient_error_w[i] = error_root[i] * (-2*x[i]); just the gradient x[i] obviously changes, since we are working with different arrays. 
-
+int main()
+{
+// let's build knn
+// we will mainly use the same preprocessing that we used in regression model.
+// thus, skip to the next comment with nametag "Actual new stuff" when reading this.
 
     //GOAL 1 implementation.
     FILE *data;
@@ -61,7 +54,7 @@ int main(){
         printf("Target dataset empty/wrong path");
         return 1;
     }
-    double target[n];
+    int target[n];
     
     int c = 0;
     char *token_y;
@@ -111,7 +104,7 @@ int main(){
     int old_row;
     int p;
     double new_matrix[n][param];
-    double new_target[n];
+    int new_target[n];
     //assign values
     for(i=0;i<n;i++){
             old_row = indices[i];
@@ -141,32 +134,42 @@ int main(){
     double val_matrix[val][param];
     double test_matrix[test][param];
 
-    double train_target[train];
-    double val_target[val];
-    double test_target[test];
+    int train_class[train];
+    int val_class[val];
+    int test_class[test];
 
     //Let's now asign new matrices their values.
     
     for(p=0; p<param; p++){
         for(i=0; i<train; i++){
             train_matrix[i][p] = new_matrix[i][p];
-            train_target[i] = new_target[i];
         }
     }
+    for(i=0; i<train; i++){
+        train_class[i] = new_target[i];
+    }
 
+   
     for(p=0; p<param; p++){
         for(i=0; i<val; i++){
             val_matrix[i][p] = new_matrix[train+i][p];
-            val_target[i] = new_target[train+i];
         }
     }
+    for(i=0; i<val; i++){
+        val_class[i] = new_target[train+i];
+    }
 
+
+    
     for(p=0; p<param; p++){
         for(i=0; i<test; i++){
             test_matrix[i][p] = new_matrix[train+val+i][p];
-            test_target[i] = new_target[train+val+i];
         }
     }
+    for(i=0; i<test; i++){
+        test_class[i] = new_target[train+val+i];
+    }
+
 
     // Feature scaling. 
 
@@ -294,197 +297,68 @@ int main(){
 
 
     // Back to the regression.
-    printf("Data pipeline built. Regression parameters chosen: %d\n", updated_param);
+    printf("Data pipeline built. knn parameters chosen: %d\n", updated_param);
 
     
-    //train pred array
-    double train_pred[train];
+    // Data pipeline built. now off to actual knn algorythm
+    // for distance we can use euclidian distance formula, then we flag each point and write the distance into an array
+    // then, we can use a basic sorting algorythm in order to sort them from lowest to highest(bubble sort should suffice).
+    // then, we pick k number of those data points, starting from the lowest, from the array and flag them.
+    // then, we loop through each data point's class and calculate the most frequent ones appearing by majority vote. 
+    // then, the majority voted class gets assigned
+    
 
-    // Variable declaration. mostly the same as in the previous version with oly a couple of changes. 
-    double error[train];
-    double sum = 0;
-    double loss = 0;  
-    int epoch = 100;
-    double weights_sum[train];
-    double error_root[train];
-    double gradient_error_matrix[train][updated_param];
-    double gradient[updated_param];
-    double b_gradient[train];
-    double gradient_change[train][updated_param];
-    double b_gradient_change[train];
-    double updated_weights[updated_param];
-    double updated_b;
-    double b_grad;
-    double a = 0.1;
-    
-    
-    double weights[updated_param];
-    for(i=0; i<updated_param; i++){
-        weights[i]=1.0;
+    int k;
+    double sum;
+
+    struct Neighbor {
+        double distance;
+        int class;
+    };
+
+    struct Neighbor neighbors[train];
+    for (i = 0; i < val; i++) {
+
+    for (k = 0; k < train; k++) {
+
+        sum = 0.0;
+
+        for (p = 0; p < updated_param; p++) {
+            double diff = X_val[i][p] - X_train[k][p];
+            sum += diff * diff;
+        }
+
+        neighbors[k].distance = sqrt(sum);
+        neighbors[k].class = train_class[k];
     }
-    double b = 0.0;
-    
-    //training loop
-
-
-
-     for(j=1; j<=epoch; j++){
-        loss = 0;
-        sum = 0;
-        double db = 0;
-        b_grad = 0;
-        double dw[updated_param];
-
-        for(i=0; i<train; i++){
-            b_gradient[i]=0.0;  // initially let's just give them 1.
-        }
-
-
-
-
-
-
-        for(i=0; i<train; i++){
-            train_pred[i]=0; 
-            for(p=0; p<updated_param; p++){
-                train_pred[i] += X_train[i][p] * weights[p];
-            }
-            train_pred[i] += b;
-        }
-        
-        for(i=0; i<train; i++){
-            error[i]= (train_target[i]-train_pred[i]) * (train_target[i]-train_pred[i]);
-            error_root[i]= (train_target[i]-train_pred[i]);
-            sum += error[i];
-            for(p=0; p<updated_param; p++){
-                gradient_error_matrix[i][p] = error_root[i] *(-2 * X_train[i][p]);        
+    struct Neighbor temp;
+    while (1) {
+        bool swap_flag = false;
+        for (k = 0; k < train - 1; k++) {
+            if (neighbors[k].distance > neighbors[k + 1].distance) {
+                temp = neighbors[k];
+                neighbors[k] = neighbors[k + 1];
+                neighbors[k + 1] = temp;
+                swap_flag = true;
             }
         }
-        for(p=0; p<updated_param; p++){
-            gradient[p] = 0;
-            for(i=0; i<train; i++){
-                gradient[p] += gradient_error_matrix[i][p];
-            }
+        if (swap_flag == 0) {
+            break;
         }
-
-        for(i=0; i<train; i++){
-            b_gradient[i] += -2 * error_root[i];
-            b_grad += b_gradient[i];
-        }
-
-
-        loss = sum / train;
-
-        for(p=0; p<updated_param; p++){
-            dw[p] = gradient[p] / train;
-        }
-        db = b_grad / train;
-
-        for(p=0; p<updated_param; p++){
-            updated_weights[p] = weights[p] - a * dw[p];
-        }
-        updated_b = b - (a * db);
-
-        printf("loss in epoch %i is %lf\n", j, loss);
-
-        for(i=0; i<updated_param; i++){
-            weights[i]=updated_weights[i];// initially let's just give them 1.
-        }
-        b = updated_b;
-
-    }
-    printf("Training complete\n");
-
-
-
-
-
-
-/// VALIDATION
- 
-
-   
-    double val_pred[val];
-    double val_error[val];
-
-
-
-    loss = 0;
-    sum = 0;
-    for(i=0; i<val; i++){
-        val_pred[i]=0; 
-        for(p=0; p<updated_param; p++){
-            val_pred[i] += X_val[i][p] * weights[p];
-        }
-        val_pred[i] += b;
-    }
-    
-        
-    for(i=0; i<val; i++){
-        val_error[i]= (val_target[i]-val_pred[i]) * (val_target[i]-val_pred[i]);
-        sum += val_error[i];
     }
 
 
-    loss = sum / val;
 
-
-    printf("loss on val - %lf\n", loss);
-
-
-
-
-
-    // Test
-    double test_pred[test];
-    double test_error[test];
-
-
-
-    loss = 0;
-    sum = 0;
-    for(i=0; i<test; i++){
-        test_pred[i]=0; 
-        for(p=0; p<updated_param; p++){
-            test_pred[i] += X_test[i][p] * weights[p];
-        }
-        test_pred[i] += b;
-    }
-    
-        
-    for(i=0; i<test; i++){
-        test_error[i]= (test_target[i]-test_pred[i]) * (test_target[i]-test_pred[i]);
-        sum += test_error[i];
-    }
-
-
-    loss = sum / test;
-
-
-    printf("loss on test - %lf\n", loss);
-
-
-    //checking out the equation.
-    double original_weight[updated_param];
-    double original_b;
-    double param_sum = 0.0;
-    for(p=0; p<updated_param; p++){
-    original_weight[p] = weights[p] / q_train[p];
-    param_sum += (weights[p] * u_train[p] / q_train[p]);
-    printf("Weight %i was predicted to be %lf\n", p, original_weight[p]);
-    }
-    original_b = b - param_sum;
-    printf("original b is = ", original_b);
+    // sort neighbors here
+    // take first K here
+    // majority vote here
+    // assign prediction for X_val[i]
+}
 
 
 
 
 
 
-
-    
-
-
-    
 
 }
