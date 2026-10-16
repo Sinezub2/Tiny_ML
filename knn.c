@@ -306,59 +306,172 @@ int main()
     // then, we pick k number of those data points, starting from the lowest, from the array and flag them.
     // then, we loop through each data point's class and calculate the most frequent ones appearing by majority vote. 
     // then, the majority voted class gets assigned
-    
 
-    int k;
-    double sum;
+double sum;
 
-    struct Neighbor {
-        double distance;
-        int class;
-    };
+struct Neighbor {
+    double distance;
+    int class;
+};
 
-    struct Neighbor neighbors[train];
-    for (i = 0; i < val; i++) {
+struct Neighbor neighbors[train];
 
-    for (k = 0; k < train; k++) {
+
+
+// GET K OPTIONS
+
+printf("Enter the amount of k's you want to check: ");
+
+int k_amt;
+scanf("%i", &k_amt);
+
+if (k_amt <= 0) {
+    printf("Invalid amount of K values.\n");
+    return 1;
+}
+
+int k_options[k_amt];
+
+printf("Enter the k's you want to check:\n");
+
+for (int q = 0; q < k_amt; q++) {
+
+    scanf("%i", &k_options[q]);
+
+    if (k_options[q] <= 0 || k_options[q] > train) {
+        printf("Invalid K: %i. K must be between 1 and %i.\n",
+               k_options[q], train);
+        return 1;
+    }
+}
+
+
+int correct_class[k_amt];
+double pred_results[k_amt];
+
+for (int q = 0; q < k_amt; q++) {
+    correct_class[q] = 0;
+}
+
+
+// Val
+
+for (int i = 0; i < val; i++) {
+
+
+
+    for (int k = 0; k < train; k++) {
 
         sum = 0.0;
 
-        for (p = 0; p < updated_param; p++) {
+        for (int p = 0; p < updated_param; p++) {
+
             double diff = X_val[i][p] - X_train[k][p];
+
             sum += diff * diff;
         }
 
         neighbors[k].distance = sqrt(sum);
         neighbors[k].class = train_class[k];
     }
+
+
     struct Neighbor temp;
+
     while (1) {
+
         bool swap_flag = false;
-        for (k = 0; k < train - 1; k++) {
-            if (neighbors[k].distance > neighbors[k + 1].distance) {
+
+        for (int k = 0; k < train - 1; k++) {
+
+            if (neighbors[k].distance >
+                neighbors[k + 1].distance) {
+
                 temp = neighbors[k];
                 neighbors[k] = neighbors[k + 1];
                 neighbors[k + 1] = temp;
+
                 swap_flag = true;
             }
         }
-        if (swap_flag == 0) {
+
+        if (swap_flag == false) {
             break;
         }
     }
 
 
 
-    // sort neighbors here
-    // take first K here
-    // majority vote here
-    // assign prediction for X_val[i]
+    for (int q = 0; q < k_amt; q++) {
+
+        int K = k_options[q];
+
+        int target_class = neighbors[0].class;
+        int max_count = 0;
+
+
+        // MAJORITY VOTE
+        for (int a = 0; a < K; a++) {
+
+            int test_class = neighbors[a].class;
+            int current_count = 0;
+
+            for (int j = 0; j < K; j++) {
+
+                if (neighbors[j].class == test_class) {
+                    current_count++;
+                }
+            }
+
+            if (current_count > max_count) {
+
+                max_count = current_count;
+                target_class = test_class;
+            }
+        }
+
+
+        // correct class
+        if (target_class == val_class[i]) {
+            correct_class[q]++;
+        }
+    }
 }
 
 
+// accuracy (next time i can go for precision too. i guess later)
+
+for (int q = 0; q < k_amt; q++) {
+
+    pred_results[q] =
+        (double)correct_class[q] / val;
+
+    printf(
+        "K = %i | validation accuracy = %lf\n",
+        k_options[q],
+        pred_results[q]
+    );
+}
 
 
+// best k and best score
+
+double max_accuracy = pred_results[0];
+int best_k = k_options[0];
+
+for (int q = 1; q < k_amt; q++) {
+
+    if (pred_results[q] > max_accuracy) {
+
+        max_accuracy = pred_results[q];
+        best_k = k_options[q];
+    }
+}
 
 
-
+printf(
+    "Best accuracy: %lf | Best K: %i\n",
+    max_accuracy,
+    best_k
+);
 }
